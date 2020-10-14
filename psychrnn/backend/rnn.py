@@ -9,14 +9,17 @@ ABC = ABCMeta('ABC', (object,), {})
 import tensorflow as tf
 import numpy as np
 
+from rich import print
 import sys
 from time import time
 from os import makedirs, path
 from inspect import isgenerator
+from rich.progress import track
 
 from psychrnn.backend.regularizations import Regularizer
 from psychrnn.backend.loss_functions import LossFunction
 from psychrnn.backend.initializations import WeightInitializer, GaussianSpectralRadius
+from psychrnn.backend.utils import train_progress
 
 tf.compat.v1.disable_eager_execution()
 
@@ -545,57 +548,68 @@ class RNN(ABC):
         epoch = 1
         batch_size = next(trial_batch_generator)[0].shape[0]
         losses = []
+        reg_loss = 0
         if performance_cutoff is not None:
             performance = performance_cutoff - 1
+        else:
+            performance = 0
 
-        while epoch * batch_size < training_iters and (performance_cutoff is None or performance < performance_cutoff):
-            batch_x, batch_y, output_mask, _ = next(trial_batch_generator)
-            self.sess.run(optimize, feed_dict={self.x: batch_x, self.y: batch_y, self.output_mask: output_mask})
-            # --------------------------------------------------
-            # Output batch loss
-            # --------------------------------------------------
-            if epoch % loss_epoch == 0:
-                reg_loss = self.sess.run(self.reg_loss,
-                                feed_dict={self.x: batch_x, self.y: batch_y, self.output_mask: output_mask})
-                losses.append(reg_loss)
-                if verbosity:
-                    print("Iter " + str(epoch * batch_size) + ", Minibatch Loss= " + \
-                          "{:.6f}".format(reg_loss))
+        with train_progress:
+            task_id = train_progress.add_task("Training", start=True, total=training_iters, 
+                        loss=reg_loss, performance=performance, performance_cutoff=performance_cutoff)
 
-            # --------------------------------------------------
-            # Allow for curriculum learning
-            # --------------------------------------------------
-            if curriculum is not None and epoch % curriculum.metric_epoch == 0:
-                trial_batch, trial_y, output_mask, _ = next(trial_batch_generator)
-                output, _ = self.test(trial_batch)
-                if curriculum.metric_test(trial_batch, trial_y, output_mask, output, epoch, losses, verbosity):
-                    if curriculum.stop_training:
-                        break
-                    trial_batch_generator = curriculum.get_generator_function()
+            for step in track(range(training_iters)):
+                train_progress.update(task_id, completed=epoch * batch_size, 
+                        loss=reg_loss, performance=performance, performance_cutoff=performance_cutoff)
 
-            # --------------------------------------------------
-            # Save intermediary weights
-            # --------------------------------------------------
-            if epoch % save_training_weights_epoch == 0:
-                if training_weights_path is not None:
-                    self.save(training_weights_path + str(epoch))
-                    if verbosity:
-                        print("Training weights saved in file: %s" % training_weights_path + str(epoch))
-            
-            # ---------------------------------------------------
-            # Update performance value if necessary
-            # ---------------------------------------------------
-            if performance_measure is not None:
-                trial_batch, trial_y, output_mask, _ = next(trial_batch_generator)
-                output, _ = self.test(trial_batch)
-                performance = performance_measure(trial_batch, trial_y, output_mask, output, epoch, losses, verbosity)
-                if verbosity:
-                    print("performance: " + str(performance))
-            epoch += 1
+                if epoch * batch_size >= training_iters: 
+                    print('[green]Reached the end')
+                    break
+                if not (performance_cutoff is None or performance < performance_cutoff):
+                    print('[green]Reached peak performance')
+                    break
+
+                batch_x, batch_y, output_mask, _ = next(trial_batch_generator)
+                self.sess.run(optimize, feed_dict={self.x: batch_x, self.y: batch_y, self.output_mask: output_mask})
+                # --------------------------------------------------
+                # Output batch loss
+                # --------------------------------------------------
+                if epoch % loss_epoch == 0:
+                    reg_loss = self.sess.run(self.reg_loss,
+                                    feed_dict={self.x: batch_x, self.y: batch_y, self.output_mask: output_mask})
+                    losses.append(reg_loss)
+                    
+
+                # --------------------------------------------------
+                # Allow for curriculum learning
+                # --------------------------------------------------
+                if curriculum is not None and epoch % curriculum.metric_epoch == 0:
+                    trial_batch, trial_y, output_mask, _ = next(trial_batch_generator)
+                    output, _ = self.test(trial_batch)
+                    if curriculum.metric_test(trial_batch, trial_y, output_mask, output, epoch, losses, verbosity):
+                        if curriculum.stop_training:
+                            break
+                        trial_batch_generator = curriculum.get_generator_function()
+
+                # --------------------------------------------------
+                # Save intermediary weights
+                # --------------------------------------------------
+                if epoch % save_training_weights_epoch == 0:
+                    if training_weights_path is not None:
+                        self.save(training_weights_path + str(epoch))
+                
+                # ---------------------------------------------------
+                # Update performance value if necessary
+                # ---------------------------------------------------
+                if performance_measure is not None:
+                    trial_batch, trial_y, output_mask, _ = next(trial_batch_generator)
+                    output, _ = self.test(trial_batch)
+                    performance = performance_measure(trial_batch, trial_y, output_mask, output, epoch, losses, verbosity)
+
+                epoch += 1
 
         t2 = time()
-        if verbosity:
-            print("Optimization finished!")
+        print("[green bold]Optimization finished!")
 
         # --------------------------------------------------
         # Save final weights
@@ -603,7 +617,7 @@ class RNN(ABC):
         if save_weights_path is not None:
             self.save(save_weights_path)
             if verbosity:
-                print("Model saved in file: %s" % save_weights_path)
+                print("[magenta]Model saved in file: %s" % save_weights_path)
 
         # --------------------------------------------------
         # Return losses, training time, initialization time
