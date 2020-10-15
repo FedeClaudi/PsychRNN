@@ -183,7 +183,7 @@ class Task(ABC):
 
         return x_data, y_data, mask
 
-    @timeit
+    
     def batch_generator(self):
         """ Generates a batch of trials.
 
@@ -200,29 +200,34 @@ class Task(ABC):
         
         """
 
-        batch = 1
-        while batch > 0:
+        @timeit
+        def _make_batch():
+            batch = 1
+            while batch > 0:
 
-            x_data = []
-            y_data = []
-            mask = []
-            params = []
-            # ----------------------------------
-            # Loop over trials in batch
-            # ----------------------------------
-            for trial in range(self.N_batch):
-                # ---------------------------------------
-                # Generate each trial based on its params
-                # ---------------------------------------
-                p = self.generate_trial_params(batch, trial)
-                x,y,m = self.generate_trial(p)
-                x_data.append(x)
-                y_data.append(y)
-                mask.append(m)
-                params.append(p)
+                x_data = []
+                y_data = []
+                mask = []
+                params = []
+                # ----------------------------------
+                # Loop over trials in batch
+                # ----------------------------------
+                for trial in range(self.N_batch):
+                    # ---------------------------------------
+                    # Generate each trial based on its params
+                    # ---------------------------------------
+                    p = self.generate_trial_params(batch, trial)
+                    x,y,m = self.generate_trial(p)
+                    x_data.append(x)
+                    y_data.append(y)
+                    mask.append(m)
+                    params.append(p)
 
-            batch += 1
-
+                batch += 1
+                
+            return x_data, y_data, mask, params
+            
+            x_data, y_data, mask, params = _make_batch()
             yield np.array(x_data), np.array(y_data), np.array(mask), np.array(params)
 
     def get_trial_batch(self):
