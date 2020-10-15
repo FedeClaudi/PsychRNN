@@ -460,6 +460,7 @@ class RNN(ABC):
             * **initialization_time** (*float*) -- Time spent initializing the network and preparing to train.
 
         """
+        print('[bold magenta]Setting up training')
         if not self.is_built:
             self.build()
 
@@ -554,6 +555,7 @@ class RNN(ABC):
         else:
             performance = 0
 
+        print('[bold magenta]Staring training')
         with train_progress:
             task_id = train_progress.add_task("Training", start=True, total=training_iters, 
                         loss=reg_loss, performance=performance, performance_cutoff=performance_cutoff)
