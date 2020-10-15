@@ -9,7 +9,7 @@ from rich.text import Text
 import psutil 
 import os 
 import GPUtil as GPU 
-
+import time
 
 
 GPUs = GPU.getGPUs()
