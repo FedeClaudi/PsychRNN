@@ -29,10 +29,10 @@ class LossColumn(TextColumn):
 
     def render(self, task):
         try:
-            return Text(f"loss: {task.loss:.3f}")
+            return Text(f"loss: {task.loss:e}")
         except  AttributeError:
             try:
-                return Text(f"loss: {task.fields['loss']:.3f}")
+                return Text(f"loss: {task.fields['loss']:e}")
             except AttributeError:
                 print(failed)
             return 'no loss'
