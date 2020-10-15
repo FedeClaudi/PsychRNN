@@ -4,6 +4,8 @@ import numpy as np
 
 from abc import ABCMeta, abstractmethod
 
+from psychrnn.backend.utils import timeit
+
 # abstract class python 2 & 3 compatible
 ABC = ABCMeta('ABC', (object,), {})
 
@@ -181,6 +183,7 @@ class Task(ABC):
 
         return x_data, y_data, mask
 
+    @timeit
     def batch_generator(self):
         """ Generates a batch of trials.
 
