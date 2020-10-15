@@ -409,7 +409,7 @@ class RNN(ABC):
 
         return
 
-    def train(self, trial_batch_generator, train_params={}):
+    def train(self, trial_batch_generator, train_params={}, is_colab=False):
         """ Train the network.
 
         Arguments:
@@ -578,6 +578,8 @@ class RNN(ABC):
                     reg_loss = self.sess.run(self.reg_loss,
                                     feed_dict={self.x: batch_x, self.y: batch_y, self.output_mask: output_mask})
                     losses.append(reg_loss)
+                    if is_colab:
+                        print(f'epoch {epoch}/{int(training_iters/ batch_size)} - loss: {reg_loss}')
                     
 
                 # --------------------------------------------------
