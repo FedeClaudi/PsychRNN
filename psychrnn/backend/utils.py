@@ -6,8 +6,19 @@ from rich.progress import (
 )
 from rich.text import Text
 
+import psutil 
+import os 
+import GPUtil as GPU 
 
 
+
+GPUs = GPU.getGPUs()
+if GPUs:
+    gpu = GPUs[0]
+else:
+    gpu = None
+
+    
 class SpeedColumn(TextColumn):
     _renderable_cache = {}
 
@@ -37,22 +48,18 @@ class LossColumn(TextColumn):
                 print(failed)
             return 'no loss'
 
-class PerformanceColumn(TextColumn):
+class GPUColumn(TextColumn):
     _renderable_cache = {}
 
     def __init__(self, *args):
         pass
 
     def render(self, task):
-        if task.fields['performance'] is None or task.fields['performance_cutoff'] is None:
-            return Text('Performance: nan')
-            
-        try:
-            return Text(f"Performance: {task.fields['performance']:.3f}/{task.fields['performance_cutoff']:.3f}")
-        except AttributeError:
-            print(failed)
-            return 'no loss'
-
+        if gpu is None:
+            return Text('no gpu')
+        else:
+            process = psutil.Process(os.getpid())
+            return Text(f'Used mem: {gpu.memoryUsed} / Tot mem: {gpu.memoryTotal}')
 
 train_progress = Progress(
     TextColumn("[bold magenta]Step {task.completed}/{task.total}"),
