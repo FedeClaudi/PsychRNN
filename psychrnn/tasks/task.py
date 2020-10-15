@@ -227,8 +227,8 @@ class Task(ABC):
                 
             return x_data, y_data, mask, params
             
-            x_data, y_data, mask, params = _make_batch()
-            yield np.array(x_data), np.array(y_data), np.array(mask), np.array(params)
+        x_data, y_data, mask, params = _make_batch()
+        yield np.array(x_data), np.array(y_data), np.array(mask), np.array(params)
 
     def get_trial_batch(self):
         """Get a batch of trials.
