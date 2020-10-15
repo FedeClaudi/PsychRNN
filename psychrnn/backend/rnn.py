@@ -278,7 +278,8 @@ class RNN(ABC):
         # --------------------------------------------------
         # Open a session
         # --------------------------------------------------
-        self.sess = tf.compat.v1.Session()
+        # self.sess = tf.compat.v1.Session()
+        self.sess = tf.Session()
         if not tf.test.is_gpu_available():
             print(f'[green]Started session on GPU: {tf.test.gpu_device_name()}')
         else:
