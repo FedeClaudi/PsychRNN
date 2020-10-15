@@ -581,7 +581,7 @@ class RNN(ABC):
                                     feed_dict={self.x: batch_x, self.y: batch_y, self.output_mask: output_mask})
                     losses.append(reg_loss)
                     if is_colab:
-                        print(f'epoch {epoch}/{int(training_iters/ batch_size)} - loss: {reg_loss}')
+                        print(f'epoch {epoch}/{int(training_iters/ batch_size)} - loss: {reg_loss:e}')
                     
 
                 # --------------------------------------------------
