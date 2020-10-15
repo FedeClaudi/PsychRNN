@@ -19,7 +19,7 @@ from rich.progress import track
 from psychrnn.backend.regularizations import Regularizer
 from psychrnn.backend.loss_functions import LossFunction
 from psychrnn.backend.initializations import WeightInitializer, GaussianSpectralRadius
-from psychrnn.backend.utils import train_progress
+from psychrnn.backend.utils import train_progress, timeit
 
 tf.compat.v1.disable_eager_execution()
 
@@ -581,7 +581,12 @@ class RNN(ABC):
                     break
 
                 batch_x, batch_y, output_mask, _ = next(trial_batch_generator)
-                self.sess.run(optimize, feed_dict={self.x: batch_x, self.y: batch_y, self.output_mask: output_mask})
+                self.sess.run(optimize, feed_dict={self.x: batch_x, 
+                                                    self.y: batch_y, 
+                                                    self.output_mask: output_mask
+                                                }
+                                    )
+                
                 # --------------------------------------------------
                 # Output batch loss
                 # --------------------------------------------------
