@@ -284,8 +284,6 @@ class RNN(ABC):
             print(f'[green]Started session on GPU: {tf.test.gpu_device_name()}')
         else:
             print('[red]Failed to start tensorflow on a GPU!!')
-            from tensorflow.python.client import device_lib
-            print(device_lib.list_local_devices())
 
 
         # --------------------------------------------------

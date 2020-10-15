@@ -4,8 +4,7 @@ import numpy as np
 
 from abc import ABCMeta, abstractmethod
 
-from psychrnn.backend.utils import timeit
-
+import time
 # abstract class python 2 & 3 compatible
 ABC = ABCMeta('ABC', (object,), {})
 
@@ -200,36 +199,36 @@ class Task(ABC):
         
         """
 
-        @timeit
-        def _make_batch():
-            batch = 1
-            while batch > 0:
+        
+        batch = 1
 
-                x_data = []
-                y_data = []
-                mask = []
-                params = []
-                # ----------------------------------
-                # Loop over trials in batch
-                # ----------------------------------
-                for trial in range(self.N_batch):
-                    # ---------------------------------------
-                    # Generate each trial based on its params
-                    # ---------------------------------------
-                    p = self.generate_trial_params(batch, trial)
-                    x,y,m = self.generate_trial(p)
-                    x_data.append(x)
-                    y_data.append(y)
-                    mask.append(m)
-                    params.append(p)
+        while batch > 0:
+            ts = time.time()
 
-                batch += 1
-                
-            return x_data, y_data, mask, params
-            
-        x_data, y_data, mask, params = _make_batch()
-        yield np.array(x_data), np.array(y_data), np.array(mask), np.array(params)
+            x_data = []
+            y_data = []
+            mask = []
+            params = []
+            # ----------------------------------
+            # Loop over trials in batch
+            # ----------------------------------
+            for trial in range(self.N_batch):
+                # ---------------------------------------
+                # Generate each trial based on its params
+                # ---------------------------------------
+                p = self.generate_trial_params(batch, trial)
+                x,y,m = self.generate_trial(p)
+                x_data.append(x)
+                y_data.append(y)
+                mask.append(m)
+                params.append(p)
 
+            batch += 1
+            te = time.time()
+            print(f"Batchy {round( (te - ts) * 1000, 2)} ms")        
+            yield np.array(x_data), np.array(y_data), np.array(mask), np.array(params)
+
+       
     def get_trial_batch(self):
         """Get a batch of trials.
 
