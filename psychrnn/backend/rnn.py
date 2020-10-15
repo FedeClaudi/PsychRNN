@@ -279,6 +279,11 @@ class RNN(ABC):
         # Open a session
         # --------------------------------------------------
         self.sess = tf.compat.v1.Session()
+        if not tf.test.is_gpu_available():
+            print(f'[green]Started session on GPU: {tf.test.gpu_device_name()}')
+        else:
+            print('[red]Failed to start tensorflow on a GPU!!')
+
 
         # --------------------------------------------------
         # Record successful build
@@ -557,12 +562,13 @@ class RNN(ABC):
 
         print('[bold magenta]Staring training')
         with train_progress:
-            task_id = train_progress.add_task("Training", start=True, total=training_iters, 
+            task_id = train_progress.add_task("Training", start=True, total=int(training_iters/ batch_size), 
                         loss=reg_loss, performance=performance, performance_cutoff=performance_cutoff)
 
             for step in track(range(training_iters)):
-                train_progress.update(task_id, completed=epoch * batch_size, 
-                        loss=reg_loss, performance=performance, performance_cutoff=performance_cutoff)
+                train_progress.update(task_id, completed=epoch, 
+                        loss=reg_loss, performance=performance, 
+                        performance_cutoff=performance_cutoff)
 
                 if epoch * batch_size >= training_iters: 
                     print('[green]Reached the end')
