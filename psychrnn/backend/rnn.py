@@ -577,14 +577,14 @@ class RNN(ABC):
 
                 batch_x, batch_y, output_mask, _ = next(trial_batch_generator)
 
-                ts = time.time()
+                ts = time()
                 self.sess.run(optimize, feed_dict={self.x: batch_x, 
                                                     self.y: batch_y, 
                                                     self.output_mask: output_mask
                                                 }
                                     )
-                te = time.time()
-                print(f"Runny {round( (te - ts), 3)} s") 
+                te = time()
+                # print(f"Runny {round( (te - ts), 3)} s") 
 
 
                 # --------------------------------------------------

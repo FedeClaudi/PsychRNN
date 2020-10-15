@@ -225,7 +225,7 @@ class Task(ABC):
 
             batch += 1
             te = time.time()
-            print(f"Batchy {round( (te - ts), 3)} s")        
+            # print(f"Batchy {round( (te - ts), 3)} s")        
             yield np.array(x_data), np.array(y_data), np.array(mask), np.array(params)
 
        
