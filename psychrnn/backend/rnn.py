@@ -574,17 +574,19 @@ class RNN(ABC):
                 if epoch * batch_size >= training_iters: 
                     print('[green]Reached the end')
                     break
-                if not (performance_cutoff is None or performance < performance_cutoff):
-                    print('[green]Reached peak performance')
-                    break
 
                 batch_x, batch_y, output_mask, _ = next(trial_batch_generator)
+
+                ts = time.time()
                 self.sess.run(optimize, feed_dict={self.x: batch_x, 
                                                     self.y: batch_y, 
                                                     self.output_mask: output_mask
                                                 }
                                     )
-                
+                te = time.time()
+                print(f"Runny {round( (te - ts), 3)} s") 
+
+
                 # --------------------------------------------------
                 # Output batch loss
                 # --------------------------------------------------
@@ -594,18 +596,6 @@ class RNN(ABC):
                     losses.append(reg_loss)
                     if is_colab:
                         print(f'epoch {epoch}/{int(training_iters/ batch_size)} - loss: {reg_loss:e}')
-                    
-
-                # --------------------------------------------------
-                # Allow for curriculum learning
-                # --------------------------------------------------
-                if curriculum is not None and epoch % curriculum.metric_epoch == 0:
-                    trial_batch, trial_y, output_mask, _ = next(trial_batch_generator)
-                    output, _ = self.test(trial_batch)
-                    if curriculum.metric_test(trial_batch, trial_y, output_mask, output, epoch, losses, verbosity):
-                        if curriculum.stop_training:
-                            break
-                        trial_batch_generator = curriculum.get_generator_function()
 
                 # --------------------------------------------------
                 # Save intermediary weights
@@ -614,14 +604,6 @@ class RNN(ABC):
                     if training_weights_path is not None:
                         self.save(training_weights_path + str(epoch))
                 
-                # ---------------------------------------------------
-                # Update performance value if necessary
-                # ---------------------------------------------------
-                if performance_measure is not None:
-                    trial_batch, trial_y, output_mask, _ = next(trial_batch_generator)
-                    output, _ = self.test(trial_batch)
-                    performance = performance_measure(trial_batch, trial_y, output_mask, output, epoch, losses, verbosity)
-
                 epoch += 1
 
         t2 = time()
