@@ -72,7 +72,7 @@ class GPUColumn(TextColumn):
             return Text('no gpu')
         else:
             process = psutil.Process(os.getpid())
-            return Text(f'Used mem: {gpu.memoryUsed:.3fMGB / Tot mem: {gpu.memoryTotal:.3f}MB')
+            return Text(f'Used mem: {gpu.memoryUsed:.3f}MGB / Tot mem: {gpu.memoryTotal:.3f}MB')
 
 train_progress = Progress(
     TextColumn("[bold magenta]Step {task.completed}/{task.total}"),
